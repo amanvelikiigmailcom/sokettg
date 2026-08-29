@@ -1,26 +1,40 @@
-# AGENT.md — Project Overview & Agent Instructions
+# AGENT.md — Primary Single Source of Truth & Instructions
 
-## 📌 Project: SoketAEO
-**SoketAEO** is an asynchronous real-time lead generation aggregator and socket daemon designed to monitor multiple social platforms and community channels for high-intent client requests related to:
-1. **AEO / GEO & AI SEO**: Optimizing brand presence in LLM answer engines (ChatGPT, Perplexity, Claude, SearchGPT).
-2. **Target Advertising**: Meta / Facebook Ads, Google Ads / PPC targeting US, global, and Russian markets.
+> 📌 **Note for all AI agents**: This file is the definitive guide and source of truth for the **SoketAEO** project. All agents (including Claude, Antigravity, etc.) must read and follow the specifications, rules, and roadmap laid out here.
 
 ---
 
-## 🏗 Architecture & Tech Stack
+## 🎯 1. Project Mission & Goals
+**SoketAEO** is a high-speed real-time lead generation engine and socket daemon. It aggregates streams and events from multiple platforms (**Telegram, Reddit, Bluesky, Discord, Slack**) to catch high-intent client inquiries for:
+1. **AEO / GEO & AI SEO**: Optimizing websites and brands to be cited and recommended by AI answer engines (ChatGPT, Perplexity, Claude, SearchGPT).
+2. **Target Advertising & Media Buying**: Running targeted ad campaigns (Meta / Facebook Ads, Google Ads / PPC) in the US, global tier-1 markets, and RU.
+3. **SaaS & Founder Growth Inquiries**: Identifying founders asking questions like *"how to rank in ChatGPT"*, *"how to get traffic in US"*, *"looking for media buyer/targetologist"*.
+
+---
+
+## 🏗 2. Tech Stack & Architecture
 
 - **Language & Runtime**: Python 3.10+ (AsyncIO)
 - **Telegram Monitoring**: Telethon (MTProto client for passive listening of user groups & channels)
 - **Reddit Monitoring**: `asyncpraw` (Real-time submission stream across target subreddits)
 - **Bluesky Monitoring**: `websockets` connected directly to public Jetstream Firehose (`wss://jetstream2.us-east.bsky.network`)
-- **Discord Monitoring**: `discord.py` (Gateway event listener)
+- **Discord Monitoring**: `discord.py` (Gateway event listener for channels)
 - **Slack Monitoring**: `slack_sdk` (Socket Mode client for subscribed workspaces)
 - **Alert Dispatcher**: `aiohttp` Telegram Bot API notifier (HTML formatted alerts with direct deep-links)
 - **Configuration**: `pydantic` + `python-dotenv`
+- **Persistence & Deduplication**: SQLite (`aiosqlite`) for deduplication
+
+```
+[ Telegram Groups (Telethon) ]  ──────┐
+[ Reddit Stream (PRAW API)   ]  ──────┤
+[ Bluesky Jetstream (Firehose)] ──────┼──► [ Keyword Matcher ] ──► [ Deduplication DB ] ──► [ Telegram Alert Bot ]
+[ Discord Gateway (Events)   ]  ──────┤
+[ Slack Socket Mode          ]  ──────┘
+```
 
 ---
 
-## 📁 Repository Structure
+## 📁 3. Project Structure
 
 ```
 soketaeo/
@@ -28,8 +42,8 @@ soketaeo/
 ├── .env.example               # Template for credentials
 ├── .gitignore                 # Excludes .env, *.session, logs, caches
 ├── requirements.txt           # Python dependencies
-├── AGENT.md                   # Instructions for AI agents (this file)
-├── CLAUDE.md                  # Context file for Claude Code
+├── AGENT.md                   # Single source of truth (this file)
+├── CLAUDE.md                  # Claude redirect to AGENT.md
 ├── README.md                  # Human-readable guide & anti-ban rules
 └── src/
     ├── config.py              # Configuration loader & validator
@@ -45,60 +59,55 @@ soketaeo/
     ├── notifier/
     │   └── telegram_notifier.py # Real-time alert sender to Telegram
     └── storage/
-        └── db.py              # Deduplication & event persistence (planned)
+        └── db.py              # Deduplication & event persistence
 ```
 
 ---
 
-## ⚙️ Environment Variables (`.env`)
+## 📋 4. Detailed Roadmap & Step-by-Step Plan
 
-The system uses `.env` for secrets. Any unconfigured service is automatically skipped at runtime without crashing other listeners.
+### ✅ Phase 1: Core Architecture & Scaffolding (COMPLETED)
+- [x] Initialized project structure and Git repository.
+- [x] Implemented modular listener architecture for Telegram, Reddit, Bluesky, Discord, and Slack.
+- [x] Built instant keyword matching engine (`src/matcher/keyword_matcher.py`).
+- [x] Implemented Telegram alert notification system with rich HTML formatting (`src/notifier/telegram_notifier.py`).
+- [x] Created Bluesky Jetstream Firehose listener (`src/listeners/bluesky_listener.py`).
+- [x] Created `.env` template and `.gitignore` security rules.
 
-| Key | Description |
-| :--- | :--- |
-| `TELEGRAM_NOTIFY_BOT_TOKEN` | Bot token from @BotFather for sending alerts |
-| `TELEGRAM_NOTIFY_CHAT_ID` | Telegram User ID or Channel ID to receive alerts |
-| `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` | Credentials from my.telegram.org for Telethon |
-| `TELEGRAM_PHONE` | Phone number for user session |
-| `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` | Reddit Script App credentials |
-| `REDDIT_SUBREDDITS` | Comma-separated subreddits to monitor |
-| `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` | Optional (Jetstream works publicly) |
-| `DISCORD_TOKEN` | Bot or User token |
-| `DISCORD_IS_USER_TOKEN` | Boolean (`true` or `false`) |
-| `SLACK_BOT_TOKEN` / `SLACK_APP_TOKEN` | Slack App credentials |
-| `KEYWORDS_AEO_GEO` | Comma-separated keywords for AEO/GEO intent |
-| `KEYWORDS_TARGET` | Comma-separated keywords for Ad/Targeting intent |
+### 🔄 Phase 2: Credentials & Connection Validation (IN PROGRESS)
+- [ ] User fills in API keys and tokens in `.env`.
+- [ ] Test individual socket listeners on real live streams.
+- [ ] Connect and push to GitHub repository with valid Personal Access Token.
 
----
+### 🚀 Phase 3: Deduplication & Message Storage (UPCOMING)
+- [ ] Create `src/storage/db.py` using `aiosqlite`.
+- [ ] Implement message hash / URL deduplication with a 48-hour TTL window to prevent repetitive notifications when a user crossposts across multiple groups/platforms.
 
-## 🎯 Current Implementation Status
+### 🧠 Phase 4: AI Lead Scoring & Intent Filtering (UPCOMING)
+- [ ] Implement LLM filter (Gemini / OpenAI / Claude) to classify post intent:
+  - **HOT LEAD**: Client actively looking to hire an AEO/GEO agency or target ad specialist.
+  - **WARM LEAD**: Founder asking advice on how to rank in ChatGPT or scale ads.
+  - **COLD / NOISE**: Specialist selling services or generic news (filtered out).
+- [ ] Generate 1-sentence recommended personalized outreach pitch inside the Telegram notification.
 
-- [x] Initial repository scaffolding & `.gitignore`
-- [x] Pydantic configuration loader (`src/config.py`)
-- [x] Keyword matching engine with category assignment (`src/matcher/keyword_matcher.py`)
-- [x] Async Telegram alert notifier (`src/notifier/telegram_notifier.py`)
-- [x] Bluesky Jetstream WebSocket firehose listener (`src/listeners/bluesky_listener.py`)
-- [x] Telegram Telethon group listener (`src/listeners/telegram_listener.py`)
-- [x] Reddit AsyncPRAW stream listener (`src/listeners/reddit_listener.py`)
-- [x] Discord Gateway listener (`src/listeners/discord_listener.py`)
-- [x] Slack Socket Mode listener (`src/listeners/slack_listener.py`)
-- [x] Async concurrent runner (`src/main.py`)
+### ⚡ Phase 5: Group Expansion & Anti-Ban Management (UPCOMING)
+- [ ] Add auto-discovery of new relevant Telegram chats, subreddits, and Discord servers.
+- [ ] Strictly enforce safety limits (10–15 Telegram groups/day, 3–5 Discord servers/day).
 
 ---
 
-## 🚀 Roadmap & Next Steps for Future Tasks
-
-1. **Message Deduplication**: Add SQLite/aiosqlite database in `src/storage/db.py` to prevent duplicate alerts if the same lead is posted across multiple groups.
-2. **AI Lead Classifier (LLM Scoring)**: Optional integration with Gemini / Claude / OpenAI to score lead intent (High Intent Client vs Job Seeker vs Self-promotion) before notifying.
-3. **Auto-Summary & Pitch Suggestion**: Include a 1-sentence draft reply / pitch in the Telegram alert.
-4. **Web UI / Dashboard**: Optional lightweight FastAPI dashboard for viewing captured leads history.
+## 🔒 5. Development & Security Rules
+1. **Never commit `.env` or `*.session` files**: Secrets and user sessions must remain strictly local.
+2. **Graceful Degradation**: If any service's credentials are empty in `.env`, its listener must log an informational message and skip initialization without blocking other streams.
+3. **Fully Async**: All network I/O, socket connections, and database operations must use non-blocking `asyncio`.
+4. **Resilient Reconnections**: Every listener loop must handle disconnects gracefully with exponential backoff / retry.
 
 ---
 
-## 🛠 Useful Commands
+## 🛠 6. Quick Commands
 
 ```bash
-# Setup environment
+# Setup virtualenv
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
