@@ -15,6 +15,8 @@ class DiscordListener:
             logger.warning("[Discord] Discord token not provided. Discord listener disabled.")
             return
 
+        # Use discord.py self-bot fork for user tokens, but standard discord.py doesn't officially support user tokens well anymore.
+        # However, we will try with standard discord.py and see if it auths.
         intents = discord.Intents.default()
         intents.message_content = True
         client = discord.Client(intents=intents)
@@ -33,18 +35,24 @@ class DiscordListener:
             if res.is_match:
                 server_name = message.guild.name if message.guild else "Direct Message"
                 channel_name = message.channel.name if hasattr(message.channel, 'name') else "DM"
+                guild_id = str(message.guild.id) if message.guild else ""
+                
                 logger.info(f"[Discord] Lead in {server_name} #{channel_name} for '{res.matched_keyword}'")
                 await self.notifier.send_lead(
                     source=f"Discord ({server_name} #{channel_name})",
+                    source_id=guild_id,
                     category=res.category or "General",
                     keyword=res.matched_keyword or "",
-                    author=str(message.author),
+                    author_name=message.author.display_name,
+                    author_username=message.author.name,
+                    author_id=str(message.author.id),
+                    is_premium=False,
                     content=text,
                     url=message.jump_url
                 )
 
         try:
             logger.info("[Discord] Starting Discord client...")
-            await client.start(config.discord_token, bot=not config.discord_is_user_token)
+            await client.start(config.discord_token)
         except Exception as e:
             logger.error(f"[Discord] Discord listener error: {e}")
