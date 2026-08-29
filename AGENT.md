@@ -132,3 +132,4 @@ soketaeo/
 4. **Resilient Reconnections**: Every listener loop must handle disconnects gracefully with exponential backoff / retry.
 5. **Always Commit After Task Completion**: After finishing any requested code changes, improvements, or bug fixes, you must automatically create a git commit with a descriptive message and push it to the main branch (`git push origin main`). Do not wait for the user to ask for a commit.
 6. **Keep Updates Brief**: When recording completed work in this AGENT.md file (e.g., in the roadmap), keep descriptions extremely brief and concise to avoid cluttering the document. Also, provide brief summaries to the user.
+7. **Rely on AGENT.md First**: Do not read the entire codebase unnecessarily. The architecture and rules here provide enough context for most tasks.
