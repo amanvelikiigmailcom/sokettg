@@ -2,6 +2,8 @@
 
 > 📌 **Note for all AI agents**: This file is the definitive guide and source of truth for the **SoketAEO** project. All agents (including Claude, Antigravity, etc.) must read and follow the specifications, rules, and roadmap laid out here.
 
+**Repository:** [https://github.com/amanvelikiigmailcom/sokettg](https://github.com/amanvelikiigmailcom/sokettg) (Branch: `main`)
+
 ---
 
 ## 🎯 1. Project Mission & Goals
