@@ -1,4 +1,5 @@
-from typing import Optional, Tuple
+import re
+from typing import Optional
 from dataclasses import dataclass
 from src.keywords import KEYWORDS
 
@@ -10,21 +11,24 @@ class MatchResult:
 
 class KeywordMatcher:
     def __init__(self):
-        # Flatten and lowercase keywords for matching
-        self.categories = {
-            cat: [kw.lower() for kw in words]
-            for cat, words in KEYWORDS.items()
-        }
+        # Build regex patterns for exact word boundaries to avoid matching "geo" in "Pigeon"
+        self.categories = {}
+        for cat, words in KEYWORDS.items():
+            patterns = []
+            for kw in words:
+                kw = kw.lower()
+                # (?<![\w\-]) means no letter/number/dash before
+                # (?![\w\-]) means no letter/number/dash after
+                patterns.append((kw, re.compile(rf"(?<![\w\-]){re.escape(kw)}(?![\w\-])", re.IGNORECASE)))
+            self.categories[cat] = patterns
 
     def match(self, text: str) -> MatchResult:
         if not text:
             return MatchResult(is_match=False)
 
-        text_lower = text.lower()
-
-        for category_name, keywords in self.categories.items():
-            for kw in keywords:
-                if kw in text_lower:
+        for category_name, patterns in self.categories.items():
+            for kw, pattern in patterns:
+                if pattern.search(text):
                     return MatchResult(is_match=True, category=category_name, matched_keyword=kw)
 
         return MatchResult(is_match=False)

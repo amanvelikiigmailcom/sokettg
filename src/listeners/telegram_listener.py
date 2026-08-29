@@ -22,18 +22,36 @@ class TelegramListener:
         @self.client.on(events.NewMessage(incoming=True))
         async def handler(event):
             try:
+                chat = await event.get_chat()
+                
+                # Ignore our own notification chat
+                if str(chat.id) == str(config.notify_chat_id):
+                    return
+
+                sender = await event.get_sender()
+                
+                # Ignore bots (prevents infinite loops if bots reply)
+                if getattr(sender, 'bot', False):
+                    return
+
                 text = event.raw_text or ""
                 res = self.matcher.match(text)
+                
                 if res.is_match:
-                    chat = await event.get_chat()
-                    sender = await event.get_sender()
                     chat_title = getattr(chat, 'title', getattr(chat, 'username', 'Private/Group'))
                     sender_name = getattr(sender, 'username', getattr(sender, 'first_name', 'Unknown'))
 
-                    # Build link if public
+                    # Build link 
                     msg_link = ""
                     if getattr(chat, 'username', None):
+                        # Public group link
                         msg_link = f"https://t.me/{chat.username}/{event.id}"
+                    else:
+                        # Private supergroup link
+                        chat_id_str = str(chat.id)
+                        if chat_id_str.startswith("-100"):
+                            chat_id_str = chat_id_str[4:]
+                        msg_link = f"https://t.me/c/{chat_id_str}/{event.id}"
 
                     logger.info(f"[Telegram] Lead detected in '{chat_title}' by @{sender_name} for '{res.matched_keyword}'")
                     await self.notifier.send_lead(
