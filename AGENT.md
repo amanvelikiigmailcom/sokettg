@@ -130,3 +130,4 @@ soketaeo/
 2. **Graceful Degradation**: If any service's credentials are empty in `.env`, its listener must log an informational message and skip initialization without blocking other streams.
 3. **Fully Async**: All network I/O, socket connections, and database operations must use non-blocking `asyncio`.
 4. **Resilient Reconnections**: Every listener loop must handle disconnects gracefully with exponential backoff / retry.
+5. **Always Commit After Task Completion**: After finishing any requested code changes, improvements, or bug fixes, you must automatically create a git commit with a descriptive message and push it to the main branch (`git push origin main`). Do not wait for the user to ask for a commit.
