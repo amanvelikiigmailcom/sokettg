@@ -16,7 +16,7 @@ class TelegramListener:
             logger.warning("[Telegram] TG_API_ID or TG_API_HASH not provided. Telegram listener disabled.")
             return
 
-        session_name = "soketaeo_user"
+        session_name = "soketaeo_session"
         self.client = TelegramClient(session_name, config.tg_api_id, config.tg_api_hash)
 
         @self.client.on(events.NewMessage(incoming=True))

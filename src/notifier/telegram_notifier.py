@@ -14,16 +14,26 @@ class TelegramNotifier:
             return
 
         message = (
-            f"🎯 <b>NEW LEAD DETECTED</b>\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"📍 <b>Source:</b> {source}\n"
-            f"🏷 <b>Category:</b> {category}\n"
-            f"🔑 <b>Keyword:</b> <code>{keyword}</code>\n"
-            f"👤 <b>Author:</b> {author}\n"
+            f"🔥 <b>НАЙДЕН НОВЫЙ ЛИД!</b>
+"
+            f"━━━━━━━━━━━━━━━━━━
+"
+            f"📱 <b>Источник:</b> {source}
+"
+            f"🗂 <b>Ниша:</b> {category}
+"
+            f"🔑 <b>Сработал ключ:</b> <code>{keyword}</code>
+"
+            f"👤 <b>Автор (Логин):</b> {author}
+"
         )
         if url:
-            message += f"🔗 <b>Link:</b> <a href='{url}'>Open Post/Message</a>\n"
-        message += f"━━━━━━━━━━━━━━━━━━\n\n{content[:1500]}"
+            message += f"🔗 <a href='{url}'>Перейти к сообщению</a>
+"
+        message += f"━━━━━━━━━━━━━━━━━━
+
+💬 <b>Текст сообщения:</b>
+<i>{content[:1500]}</i>"
 
         api_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
         payload = {
