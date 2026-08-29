@@ -1,6 +1,6 @@
 from typing import Optional, Tuple
 from dataclasses import dataclass
-from src.config import config
+from src.keywords import KEYWORDS
 
 @dataclass
 class MatchResult:
@@ -10,12 +10,10 @@ class MatchResult:
 
 class KeywordMatcher:
     def __init__(self):
+        # Flatten and lowercase keywords for matching
         self.categories = {
-            "Таргет (Target Ads)": [k.lower() for k in config.keywords_target],
-            "AEO (AI Search)": [k.lower() for k in config.keywords_aeo],
-            "GEO (Generative Engine)": [k.lower() for k in config.keywords_geo],
-            "SEO (Search Engine)": [k.lower() for k in config.keywords_seo],
-            "Создание Сайтов (Web Dev)": [k.lower() for k in config.keywords_sites],
+            cat: [kw.lower() for kw in words]
+            for cat, words in KEYWORDS.items()
         }
 
     def match(self, text: str) -> MatchResult:
@@ -26,9 +24,6 @@ class KeywordMatcher:
 
         for category_name, keywords in self.categories.items():
             for kw in keywords:
-                # Add word boundary check or just substring. Since the keywords can be multiple words, substring is fine.
-                # However, to avoid 'seo' matching 'caseomatic', we could pad with spaces or use regex.
-                # For simplicity, standard substring matching as originally implemented.
                 if kw in text_lower:
                     return MatchResult(is_match=True, category=category_name, matched_keyword=kw)
 

@@ -41,21 +41,4 @@ class Config(BaseModel):
     slack_bot_token: str = os.getenv("SLACK_BOT_TOKEN", "")
     slack_app_token: str = os.getenv("SLACK_APP_TOKEN", "")
 
-    # Keywords for the 5 Niches
-    keywords_target: List[str] = [
-        k.strip().lower() for k in os.getenv("KEYWORDS_TARGET", "").split(",") if k.strip()
-    ]
-    keywords_aeo: List[str] = [
-        k.strip().lower() for k in os.getenv("KEYWORDS_AEO", "").split(",") if k.strip()
-    ]
-    keywords_geo: List[str] = [
-        k.strip().lower() for k in os.getenv("KEYWORDS_GEO", "").split(",") if k.strip()
-    ]
-    keywords_seo: List[str] = [
-        k.strip().lower() for k in os.getenv("KEYWORDS_SEO", "").split(",") if k.strip()
-    ]
-    keywords_sites: List[str] = [
-        k.strip().lower() for k in os.getenv("KEYWORDS_SITES", "").split(",") if k.strip()
-    ]
-
 config = Config()
