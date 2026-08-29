@@ -20,21 +20,46 @@
 - **Bluesky Monitoring**: `websockets` connected directly to public Jetstream Firehose (`wss://jetstream2.us-east.bsky.network`)
 - **Discord Monitoring**: `discord.py` (Gateway event listener for channels)
 - **Slack Monitoring**: `slack_sdk` (Socket Mode client for subscribed workspaces)
-- **Alert Dispatcher**: `aiohttp` Telegram Bot API notifier (HTML formatted alerts with direct deep-links)
+- **Alert Dispatcher**: `aiohttp` Telegram Bot API notifier (HTML formatted alerts with direct deep-links, supporting Forum Topics/Threads)
 - **Configuration**: `pydantic` + `python-dotenv`
 - **Persistence & Deduplication**: SQLite (`aiosqlite`) for deduplication
 
 ```
 [ Telegram Groups (Telethon) ]  ──────┐
 [ Reddit Stream (PRAW API)   ]  ──────┤
-[ Bluesky Jetstream (Firehose)] ──────┼──► [ Keyword Matcher ] ──► [ Deduplication DB ] ──► [ Telegram Alert Bot ]
+[ Bluesky Jetstream (Firehose)] ──────┼──► [ Keyword Matcher ] ──► [ Deduplication DB ] ──► [ Telegram Alert Bot / Topic ]
 [ Discord Gateway (Events)   ]  ──────┤
 [ Slack Socket Mode          ]  ──────┘
 ```
 
 ---
 
-## 📁 3. Project Structure
+## ⚙️ 3. Environment Variables & Credentials Schema (`.env`)
+
+| Variable Name | Type | Description / Destination |
+| :--- | :--- | :--- |
+| `TELEGRAM_NOTIFY_BOT_TOKEN` | `str` | Token from @BotFather for dispatching lead alerts |
+| `TELEGRAM_NOTIFY_CHAT_ID` | `str` | Target Chat/Group/Channel ID (e.g. `-100123456789` or user ID) |
+| `TELEGRAM_NOTIFY_THREAD_ID` | `int` (optional) | Specific topic/thread ID (e.g. `12`, `13`) for Telegram Forum groups |
+| `TELEGRAM_API_ID` | `int` | Numeric API ID from my.telegram.org for Telethon MTProto client |
+| `TELEGRAM_API_HASH` | `str` | API Hash from my.telegram.org for Telethon MTProto client |
+| `TELEGRAM_PHONE` | `str` | Phone number associated with Telegram user session |
+| `REDDIT_CLIENT_ID` | `str` | Script App Client ID from reddit.com/prefs/apps |
+| `REDDIT_CLIENT_SECRET` | `str` | Script App Secret from reddit.com/prefs/apps |
+| `REDDIT_USER_AGENT` | `str` | User agent identifier string |
+| `REDDIT_SUBREDDITS` | `str` (list) | Comma-separated subreddits to monitor (or `all`) |
+| `BLUESKY_HANDLE` | `str` (optional) | Bluesky handle (Jetstream works with 0 auth) |
+| `BLUESKY_APP_PASSWORD` | `str` (optional) | Bluesky app password |
+| `DISCORD_TOKEN` | `str` | Bot token or user token |
+| `DISCORD_IS_USER_TOKEN` | `bool` | `true` if using self-token, `false` if Bot token |
+| `SLACK_BOT_TOKEN` | `str` | Bot OAuth token (`xoxb-...`) |
+| `SLACK_APP_TOKEN` | `str` | Socket Mode token (`xapp-...`) |
+| `KEYWORDS_AEO_GEO` | `str` (list) | Comma-separated keywords for AEO/GEO intent |
+| `KEYWORDS_TARGET` | `str` (list) | Comma-separated keywords for Ads/Targeting intent |
+
+---
+
+## 📁 4. Project Structure
 
 ```
 soketaeo/
@@ -44,9 +69,10 @@ soketaeo/
 ├── requirements.txt           # Python dependencies
 ├── AGENT.md                   # Single source of truth (this file)
 ├── CLAUDE.md                  # Claude redirect to AGENT.md
+├── CREDENTIALS_GUIDE.md       # Step-by-step credentials retrieval manual
 ├── README.md                  # Human-readable guide & anti-ban rules
 └── src/
-    ├── config.py              # Configuration loader & validator
+    ├── config.py              # Configuration loader & validator (supports thread_id)
     ├── main.py                # Concurrent AsyncIO runner for all listeners
     ├── listeners/             # Platform socket & event listeners
     │   ├── telegram_listener.py   # Telethon client for joined groups
@@ -57,22 +83,23 @@ soketaeo/
     ├── matcher/
     │   └── keyword_matcher.py # Fast category matcher & regex/substring engine
     ├── notifier/
-    │   └── telegram_notifier.py # Real-time alert sender to Telegram
+    │   └── telegram_notifier.py # Real-time alert sender (supports message_thread_id)
     └── storage/
         └── db.py              # Deduplication & event persistence
 ```
 
 ---
 
-## 📋 4. Detailed Roadmap & Step-by-Step Plan
+## 📋 5. Detailed Roadmap & Step-by-Step Plan
 
 ### ✅ Phase 1: Core Architecture & Scaffolding (COMPLETED)
 - [x] Initialized project structure and Git repository.
 - [x] Implemented modular listener architecture for Telegram, Reddit, Bluesky, Discord, and Slack.
 - [x] Built instant keyword matching engine (`src/matcher/keyword_matcher.py`).
-- [x] Implemented Telegram alert notification system with rich HTML formatting (`src/notifier/telegram_notifier.py`).
+- [x] Implemented Telegram alert notification system with topic/thread routing (`src/notifier/telegram_notifier.py`).
 - [x] Created Bluesky Jetstream Firehose listener (`src/listeners/bluesky_listener.py`).
 - [x] Created `.env` template and `.gitignore` security rules.
+- [x] Installed all 36 Python dependencies into `.venv`.
 
 ### 🔄 Phase 2: Credentials & Connection Validation (IN PROGRESS)
 - [ ] User fills in API keys and tokens in `.env`.
@@ -96,22 +123,8 @@ soketaeo/
 
 ---
 
-## 🔒 5. Development & Security Rules
+## 🔒 6. Development & Security Rules
 1. **Never commit `.env` or `*.session` files**: Secrets and user sessions must remain strictly local.
 2. **Graceful Degradation**: If any service's credentials are empty in `.env`, its listener must log an informational message and skip initialization without blocking other streams.
 3. **Fully Async**: All network I/O, socket connections, and database operations must use non-blocking `asyncio`.
 4. **Resilient Reconnections**: Every listener loop must handle disconnects gracefully with exponential backoff / retry.
-
----
-
-## 🛠 6. Quick Commands
-
-```bash
-# Setup virtualenv
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Run all active listeners
-python3 -m src.main
-```

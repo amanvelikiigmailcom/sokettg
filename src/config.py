@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -9,6 +9,11 @@ class Config(BaseModel):
     # Telegram Notifications
     notify_bot_token: str = os.getenv("TELEGRAM_NOTIFY_BOT_TOKEN", "")
     notify_chat_id: str = os.getenv("TELEGRAM_NOTIFY_CHAT_ID", "")
+    notify_thread_id: Optional[int] = (
+        int(os.getenv("TELEGRAM_NOTIFY_THREAD_ID", "0"))
+        if os.getenv("TELEGRAM_NOTIFY_THREAD_ID") and os.getenv("TELEGRAM_NOTIFY_THREAD_ID").isdigit()
+        else None
+    )
 
     # Telegram Parser (Telethon)
     tg_api_id: int = int(os.getenv("TELEGRAM_API_ID", "0")) if os.getenv("TELEGRAM_API_ID") else 0

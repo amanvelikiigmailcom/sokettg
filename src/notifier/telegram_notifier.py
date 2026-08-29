@@ -6,6 +6,7 @@ class TelegramNotifier:
     def __init__(self):
         self.bot_token = config.notify_bot_token
         self.chat_id = config.notify_chat_id
+        self.thread_id = config.notify_thread_id
 
     async def send_lead(self, source: str, category: str, keyword: str, author: str, content: str, url: str = ""):
         if not self.bot_token or not self.chat_id:
@@ -31,6 +32,8 @@ class TelegramNotifier:
             "parse_mode": "HTML",
             "disable_web_page_preview": True
         }
+        if self.thread_id:
+            payload["message_thread_id"] = self.thread_id
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -39,6 +42,6 @@ class TelegramNotifier:
                         err_text = await resp.text()
                         logger.error(f"[Notifier] Telegram API error: {err_text}")
                     else:
-                        logger.success(f"[Notifier] Lead sent to Telegram ({source})")
+                        logger.success(f"[Notifier] Lead sent to Telegram topic ({source})")
         except Exception as e:
             logger.error(f"[Notifier] Failed to send Telegram notification: {e}")
