@@ -22,15 +22,19 @@ class TelegramListener:
         @self.client.on(events.NewMessage(incoming=True))
         async def handler(event):
             try:
+                # 1. Ignore private personal messages (DMs)
+                if event.is_private:
+                    return
+
                 chat = await event.get_chat()
                 
-                # Ignore our own notification chat
+                # Ignore our own notification chat to avoid infinite loops
                 if str(chat.id) == str(config.notify_chat_id):
                     return
 
                 sender = await event.get_sender()
                 
-                # Ignore bots (prevents infinite loops if bots reply)
+                # Ignore bots
                 if getattr(sender, 'bot', False):
                     return
 
@@ -39,7 +43,17 @@ class TelegramListener:
                 
                 if res.is_match:
                     chat_title = getattr(chat, 'title', getattr(chat, 'username', 'Private/Group'))
-                    sender_name = getattr(sender, 'username', getattr(sender, 'first_name', 'Unknown'))
+                    chat_id_str = str(chat.id)
+                    
+                    # Author info
+                    author_name = getattr(sender, 'first_name', '')
+                    if getattr(sender, 'last_name', None):
+                        author_name += f" {sender.last_name}"
+                    author_name = author_name.strip() or "Unknown"
+                    
+                    author_username = getattr(sender, 'username', '')
+                    author_id = str(getattr(sender, 'id', ''))
+                    is_premium = getattr(sender, 'premium', False)
 
                     # Build link 
                     msg_link = ""
@@ -48,17 +62,19 @@ class TelegramListener:
                         msg_link = f"https://t.me/{chat.username}/{event.id}"
                     else:
                         # Private supergroup link
-                        chat_id_str = str(chat.id)
-                        if chat_id_str.startswith("-100"):
-                            chat_id_str = chat_id_str[4:]
-                        msg_link = f"https://t.me/c/{chat_id_str}/{event.id}"
+                        clean_chat_id = chat_id_str[4:] if chat_id_str.startswith("-100") else chat_id_str
+                        msg_link = f"https://t.me/c/{clean_chat_id}/{event.id}"
 
-                    logger.info(f"[Telegram] Lead detected in '{chat_title}' by @{sender_name} for '{res.matched_keyword}'")
+                    logger.info(f"[Telegram] Lead detected in '{chat_title}' by {author_name} for '{res.matched_keyword}'")
                     await self.notifier.send_lead(
                         source=f"Telegram ({chat_title})",
+                        source_id=chat_id_str,
                         category=res.category or "General",
                         keyword=res.matched_keyword or "",
-                        author=f"@{sender_name}" if sender_name else "Anonymous",
+                        author_name=author_name,
+                        author_username=author_username,
+                        author_id=author_id,
+                        is_premium=is_premium,
                         content=text,
                         url=msg_link
                     )

@@ -8,21 +8,34 @@ class TelegramNotifier:
         self.chat_id = config.notify_chat_id
         self.thread_id = config.notify_thread_id
 
-    async def send_lead(self, source: str, category: str, keyword: str, author: str, content: str, url: str = ""):
+    async def send_lead(self, source: str, category: str, keyword: str, content: str, 
+                        author_name: str = "Anonymous", author_username: str = "", 
+                        author_id: str = "", is_premium: bool = False, source_id: str = "", url: str = ""):
+        
         if not self.bot_token or not self.chat_id:
             logger.warning(f"[Notifier] Bot token or chat_id not configured. Lead found from {source}: {content[:60]}...")
             return
 
+        premium_star = " ⭐️" if is_premium else ""
+        author_username_str = f" (@{author_username})" if author_username else ""
+        source_id_str = f" <code>[{source_id}]</code>" if source_id else ""
+        author_id_str = f" <code>[ID: {author_id}]</code>" if author_id else ""
+        
+        # Make the name clickable via tg://user?id= if we have the ID
+        author_link = f"<a href='tg://user?id={author_id}'>{author_name}</a>" if author_id else author_name
+
         message = (
             f"🔥 <b>НАЙДЕН НОВЫЙ ЛИД!</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"📱 <b>Источник:</b> {source}\n"
+            f"📱 <b>Источник:</b> {source}{source_id_str}\n"
             f"🗂 <b>Ниша:</b> {category}\n"
             f"🔑 <b>Сработал ключ:</b> <code>{keyword}</code>\n"
-            f"👤 <b>Автор (Логин):</b> {author}\n"
+            f"👤 <b>Автор:</b> {author_link}{premium_star}{author_username_str}{author_id_str}\n"
         )
+        
         if url:
             message += f"🔗 <a href='{url}'>Перейти к сообщению</a>\n"
+        
         message += f"━━━━━━━━━━━━━━━━━━\n\n💬 <b>Текст сообщения:</b>\n<i>{content[:1500]}</i>"
 
         api_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
