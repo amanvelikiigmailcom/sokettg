@@ -33,7 +33,7 @@ class RedditListener:
                         source=f"Reddit (r/{submission.subreddit.display_name})",
                         category=res.category or "General",
                         keyword=res.matched_keyword or "",
-                        author=str(submission.author),
+                        author_name=str(submission.author),
                         content=full_text,
                         url=f"https://reddit.com{submission.permalink}"
                     )

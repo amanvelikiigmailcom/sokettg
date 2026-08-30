@@ -38,7 +38,7 @@ class BlueskyListener:
                                         source="Bluesky (Firehose)",
                                         category=res.category or "General",
                                         keyword=res.matched_keyword or "",
-                                        author=did,
+                                        author_name=did,
                                         content=text,
                                         url=post_url
                                     )
